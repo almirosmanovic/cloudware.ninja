@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author"
+    content="">
+<meta name="description"
+    content="Amazon Elastic Container Service (ECS) is a highly scalable, high-performance container orchestration service that allows you to easily run and scale containerized applications on AWS. This post covers how Amazon Elastic Container Service (Amazon ECS) runs containers in a cluster with the EC2 launch type. Topics include why AWS built the task placement engine, the different strategies and constraints available to decide where and how containers are run, and things to consider when picking placement strategies." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/first/" />
+
+
+<title>
+    
+    AWS ECS Streategy :: Cloudware  — A simple theme for Hugo
+    
+</title>
+
+
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.2.1/css/flag-icon.min.css" rel="stylesheet"
+    type="text/css">
+
+
+
+<link rel="stylesheet" href="/main.min.d90905eb29b71569a516566cd9662312bee9ab021c760de6949cdc92d6688be9.css">
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#252627">
+<link rel="shortcut icon" href="/favicon.ico">
+<meta name="theme-color" content="#252627">
+<meta itemprop="name" content="AWS ECS Streategy">
+<meta itemprop="description" content="Amazon Elastic Container Service (ECS) is a highly scalable, high-performance container orchestration service that allows you to easily run and scale containerized applications on AWS. This post covers how Amazon Elastic Container Service (Amazon ECS) runs containers in a cluster with the EC2 launch type. Topics include why AWS built the task placement engine, the different strategies and constraints available to decide where and how containers are run, and things to consider when picking placement strategies.">
+
+
+<meta itemprop="datePublished" content="2016-10-02T22:55:05-04:00" />
+<meta itemprop="dateModified" content="2016-10-02T22:55:05-04:00" />
+<meta itemprop="wordCount" content="2755">
+
+
+
+<meta itemprop="keywords" content="posts," />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="/"/>
+
+<meta name="twitter:title" content="AWS ECS Streategy"/>
+<meta name="twitter:description" content="Amazon Elastic Container Service (ECS) is a highly scalable, high-performance container orchestration service that allows you to easily run and scale containerized applications on AWS. This post covers how Amazon Elastic Container Service (Amazon ECS) runs containers in a cluster with the EC2 launch type. Topics include why AWS built the task placement engine, the different strategies and constraints available to decide where and how containers are run, and things to consider when picking placement strategies."/>
+
+
+
+<meta property="article:section" content="posts" />
+
+<meta property="article:published_time" content="2016-10-02 22:55:05 -0400 -0400" />
+
+
+
+
+
+
+
+    </head>
+
+    <body class="dark-theme">
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">></span>
+            <span class="logo__text">hello operator</span>
+            <span class="logo__cursor"></span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li>
+    </ul>
+</nav>
+
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+
+            <span class="theme-toggle"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+  3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+  13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+</svg>
+</span>
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+    <main class="post">
+
+        <div class="post-info">
+            <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>13 minutes
+
+            
+
+            </p>
+        </div>
+
+        <article>
+            <h1 class="post-title"><a href="/posts/first/">AWS ECS Streategy</a></h1>
+
+            
+
+            <div class="post-content">
+                
+
+<p><a href="https://aws.amazon.com/ecs/">Amazon Elastic Container Service (ECS</a>) is a highly scalable, high-performance container orchestration service that allows you to easily run and scale containerized applications on AWS. This post covers how  <a href="https://aws.amazon.com/ecs/">Amazon Elastic Container Service (Amazon ECS</a>) runs containers in a cluster with the EC2 launch type. Topics include why AWS built the task placement engine, the different strategies and constraints available to decide where and how containers are run, and things to consider when picking placement strategies.</p>
+
+<p>If you are not familiar with the relationship between ECS and Amazon EC2 or its components, see the  <a href="http://aws.amazon.com/blogs/compute/building-blocks-of-amazon-ecs/">Building Blocks of Amazon ECS</a>  post.</p>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-ec2-instance.png" alt="Task Placement" /></p>
+
+<p>When a task is launched in a cluster, a decision has to be made to choose which container instance should run that task. Conversely, when scaling down a service, a decision has to be made to choose the specific task to be terminated.</p>
+
+<h3 id="task-placement">Task placement</h3>
+
+<p>By default, ECS uses the following placement strategies:</p>
+
+<ul>
+<li>When you run tasks with the  <a href="https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html">RunTask</a>  API action, tasks are placed randomly in a cluster.</li>
+<li>When you launch and terminate tasks with the  <a href="http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html">CreateService</a>  API action, the service scheduler spreads the tasks across the Availability Zones (and the instances within the zones) in a cluster.</li>
+</ul>
+
+<p>Before December 2016, tasks could only be placed by their default placement strategies. This meant making the decision yourself, such as writing your own scheduler, and calling the  <a href="http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html">StartTask</a>  API action to achieve custom task placement. When you manually constrained the placement of your grouping of containers, you could only place based on CPU, memory, and ports. Additionally, while creating your own scheduler can be powerful, there’s a tradeoff with complexity.</p>
+
+<p>AWS built the task placement engine, which removes the need for you to build, run, and manage your own scheduling and placement services. There are several new features that provide you with more control over how applications run across clusters through custom attributes.</p>
+
+<p>You can think of this flow as a funnel with filters for your instances. Constraints must be obeyed. If an instance doesn’t fit, it isn’t used. Strategies are then used to sort the rest of the instances by preference to determine which are the “best.”</p>
+
+<p>For every instantiation of your task, it runs through every step. Calling  <em>run-task</em>  with a count of  <em>n</em>  is effectively calling  <em>run-task n</em>  times (<em>create-service</em>  also works the same way).</p>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/17/taskplacement-filter-final.png" alt="Cluster constraints, placement constraints, placement strategies" /></p>
+
+<h3 id="example">Example</h3>
+
+<p>Here’s how to use these placement features. In this example, you use the  <a href="https://aws.amazon.com/cli/">AWS CLI</a>  <em>run-task</em>  command. For the last couple of filters, I show how to use them with placement flags, but you can just as easily include them in your task definition file instead. This can all be done in the console as well. Start with the cluster shown earlier:</p>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-cpufilter-blank.png" alt="Task Placement Instances" /></p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--placement-constraints type=&quot;memberOf&quot;,expression=&quot;attribute:ecs.instance-type == t2.small&quot; \
+--placement-strategy --placement-strategy type=&quot;binpack&quot;,field=&quot;memory&quot; \
+--count 8
+</code></pre>
+
+<h4 id="cluster-constraints">Cluster constraints</h4>
+
+<p>In the first step, eliminate all the instances that don’t have the required resources based on what you defined either in the JSON  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html">task definition</a>  or what you provided overrides for to RunTask.</p>
+
+<p>Not enough CPU? Not enough memory? A port is needed, but it is already in use on that instance? Then the instance is eliminated from the set of valid candidates.</p>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-cpufilter.png" alt="Task Placement Cluster Constraints" /></p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp
+</code></pre>
+
+<h4 id="placement-constraints">Placement constraints</h4>
+
+<p>In the second step, keep only the instances that satisfy the  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html#attributes">attribute</a>  or  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html#task-groups">task group</a>  constraints. Yes, this means that you can indicate what instance to use for a task (for example, to make sure that CPU-intensive jobs are scheduled on the right type of instance, or in which Availability Zone).</p>
+
+<p>You can also create any custom tags of your choosing. The green tasks on the green instances, the blue tasks on the blue instances! You can also use the  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html">Cluster Query Language</a>  to write expressions to check for multiple attributes. In the next section, I cover how to write and use the attributes and expressions.</p>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-1-placement-const.png" alt="Placement Constraints" /></p>
+
+<pre><code class="language-bash">--placement-constraints type=&quot;memberOf&quot;,expression=&quot;attribute:ecs.instance-type == t2.micro&quot;
+</code></pre>
+
+<h4 id="placement-strategies">Placement strategies</h4>
+
+<p>In the third step, filter on the following supported task placement strategies:</p>
+
+<ul>
+<li><code>random</code></li>
+<li><code>binpack</code></li>
+<li><code>spread</code></li>
+</ul>
+
+<p>By default, tasks are randomly placed with RunTask or spread across Availability Zones with CreateService. Spread is typically used to achieve high availability by making sure that multiple copies of a task are scheduled across multiple instances based on attributes such as Availability Zones.</p>
+
+<p>Conversely, binpack places tasks together to be as cost-efficient as possible. Later in this post, you’ll see how these placement strategies work, as well as how to chain them together and why you may want to do so.</p>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-1-placement-binpack.png" alt="Task Placement Binpack" /></p>
+
+<pre><code class="language-bash">--placement-strategy type=&quot;binpack&quot;,field=&quot;memory&quot;
+</code></pre>
+
+<h4 id="task-copies">Task copies</h4>
+
+<p>This isn’t part of the filter, but instead, the  <em>count</em>  flag is used to indicate how many copies (<em>n</em>) of a given task to run. Effectively, it tells ECS to re-run this workflow  <em>n</em>  times. By default, the count is set to 1, so  <em>run-task</em>  is executed one time. For services, the  <em>desired-count</em>  flag is used.</p>
+
+<pre><code class="language-bash">--count 8
+</code></pre>
+
+<h2 id="attributes-task-groups-and-expressions">Attributes, task groups, and expressions</h2>
+
+<p>For task placement, you can use instance fields, such as attributes, as well as task groups. These can be used in expressions for task placement constraints, or instance fields can be used standalone for task placement strategies. Here’s a quick overview of  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html">attributes, task groups, and expressions</a>  before you go any further.</p>
+
+<h3 id="instance-fields">Instance: Fields</h3>
+
+<p>Because you are using these fields with respect to instances in task placement, the  <em>instance:</em>  preface is optional and can be used either of the following ways with a field name or an attribute.</p>
+
+<pre><code class="language-bash">instance:&lt;field&gt;
+&lt;field&gt;
+</code></pre>
+
+<h4 id="field-names">Field names</h4>
+
+<p>The currently supported field names are as follows:</p>
+
+<pre><code class="language-bash">ec2InstanceId
+agentConnected
+</code></pre>
+
+<h3 id="attributes">Attributes</h3>
+
+<p>There are also instance attributes, which are prefaced with  <em>attribute</em>. Again,  <em>instance:</em>  is optional:</p>
+
+<pre><code class="language-bash">attribute:&lt;attribute-name&gt;
+</code></pre>
+
+<h4 id="built-in-attributes">Built-in attributes</h4>
+
+<p>The following are some of the provided  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html#attributes">attributes</a>:</p>
+
+<pre><code class="language-bash">ecs.ami-id
+ecs.availability-zone
+ecs.instance-type
+ecs.os-type
+ecs.subnet-id
+ecs.vpc-id
+</code></pre>
+
+<h4 id="custom-attributes">Custom attributes</h4>
+
+<p>Well, what if you don’t see an attribute that you want? This is where  <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html#attributes">custom attributes</a>  come in handy! Want to differentiate between test and prod? What about blue versus green?</p>
+
+<pre><code class="language-bash">aws ecs put-attributes \
+--attributes name=color,value=blue,targetId=&lt;your-container-instance-arn&gt;
+</code></pre>
+
+<h3 id="task-groups">Task groups</h3>
+
+<p>In addition to placing tasks based on attributes, you can use  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html#task-groups">task groups</a>. Every task is assigned a group ID that you can reference in placement. For both tasks and services, a default ID is given, or you can choose your own. Perhaps you want to run version 2 of a service but only on instances with version 1.</p>
+
+<pre><code class="language-bash">task:group
+</code></pre>
+
+<h3 id="expressions">Expressions</h3>
+
+<p>Alright, so you have some attributes and task groups… now what? Well, AWS created the  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html">Cluster Query Language</a>  to make it easy to create expressions for task placement constraints. These attributes and task groups are used with the available  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html">comparison operators</a>, which may look familiar if you’ve used Boolean operators before. Some of these operators can be written in multiple ways, such as “!” or “not”.</p>
+
+<p>For instance, to create an expression using a single attribute to select only  <em>t2.micro</em>  instances, use the  _ecs.instance-type_attribute and the string equality comparator as follows:</p>
+
+<pre><code class="language-bash">attribute:ecs.instance-type == t2.micro
+</code></pre>
+
+<p>For  <em>t2.micro</em>  and  <em>t2.nano</em>  instances, you have a few options. You could use the same syntax as earlier with the  <em>or</em> comparator:</p>
+
+<pre><code class="language-bash">attribute:ecs.instance-type == t2.micro or attribute:ecs.instance-type == t2.nano
+</code></pre>
+
+<p>Another way is to use the  <em>in</em>  comparator with an argument list:</p>
+
+<pre><code class="language-bash">attribute:ecs.instance-type in [t2.micro, t2.nano]
+</code></pre>
+
+<p>To include all t2 instances, use a wildcard and the pattern match operator instead of listing out each one:</p>
+
+<pre><code class="language-bash">attribute:ecs.instance-type =~ t2.*
+</code></pre>
+
+<p>Task group comparisons work the same way. The following snippet selects any instance upon which the task group “database” is running:</p>
+
+<pre><code class="language-bash">task:group == database
+</code></pre>
+
+<p>To select only task groups that are not “database,” combine expressions:</p>
+
+<pre><code class="language-bash">not(task:group == database)
+</code></pre>
+
+<p>You can use these expressions to filter your instances:</p>
+
+<pre><code class="language-bash">aws ecs list-container-instances \
+--filter &quot;attribute:ecs.instance-type != t2.micro&quot;
+aws ecs list-container-instances \
+--filter &quot;attribute:color == blue&quot;
+aws ecs list-container-instances \
+--filter &quot;task:group == database&quot;
+</code></pre>
+
+<p>These expressions and attributes, respectively, are also used for task placement constraints and strategies, which I cover in the next few sections.</p>
+
+<h2 id="constraints">Constraints</h2>
+
+<p>Now look at placement constraints. When determining task placement, there may be certain EC2 instances to include or exclude from running containers. For example, you may want to place tasks only on GPU types.</p>
+
+<p>Task placement constraints let you define where your containers should run across your cluster. ECS currently supports two types of placement constraints:  <em>distinctInstance</em>  and  <em>memberOf</em>. By default, ECS spreads tasks across Availability Zones and instances.</p>
+
+<pre><code class="language-bash">  &quot;placementConstraints&quot;: [ 
+      { 
+         &quot;expression&quot;: &quot;string&quot;,
+         &quot;type&quot;: &quot;string&quot;
+      }
+   ],
+</code></pre>
+
+<h3 id="distinct-instance">Distinct Instance</h3>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-3-distinctinstance.png" alt="Distinct Instance" />The  <em>distinctInstance</em>  constraint makes it possible to ensure that every container is started on a unique instance in your cluster. The distinctInstance constraint never places multiple copies of a task on a single instance, even if you request more running tasks than available instances.</p>
+
+<p>For example if you decide to place five copies of a task, each time it filters out the instances that are already running the task.</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 5 --placement-constraints type=&quot;distinctInstance&quot;
+</code></pre>
+
+<h3 id="member-of">Member of</h3>
+
+<p><strong><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-3-placement-member-of-t2micro.png" alt="Member of t2-micro" /></strong> The  <em>memberOf</em> constraint describes a set of instances on which your tasks should run. It is for anything you could define as an attribute or task<strong>.</strong> It also takes in an expression of attributes written in the  <a href="http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html">Cluster Query Language</a>.</p>
+
+<p>For example, if you have a small application and just want it to run on  <em>t2.micro</em>  instances:</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 5 \
+--placement-constraints 
+type=&quot;memberOf&quot;,expression=&quot;attribute:ecs.instance-type == t2.micro&quot;
+</code></pre>
+
+<p>You can create expressions using the Cluster Query Language to check for multiple attributes. Here’s how you can weed out all instances in the  <em>us-west-2c</em>  Availability Zone as well as instances that aren’t of type  <em>t2.nano</em>  or  <em>t2.micro</em>:</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 5 \
+--placement-constraints type=&quot;memberOf&quot;,expression=&quot;attribute:ecs.availability-zone != us-west-2c and (attribute:ecs.instance-type == t2.nano or attribute:ecs.instance-type == t2.micro)&quot;
+</code></pre>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-3-placement-member-of-affinity.png" alt="Member of affinity" /></p>
+
+<p>You can also use constraints to place all tasks with the same task group on the same instance (affinity):</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 5 --group webserver \
+--placement-constraints type=memberOf,expression=&quot;task:group == webserver&quot;
+</code></pre>
+
+<p>Or you can ensure that instances never have more than one task in the same group (anti-affinity):</p>
+
+<p>aws ecs run-task –task-definition nouvelleApp –count 5 –group webserver –placement-constraints type=memberOf,expression=”not(task:group == webserver)”</p>
+
+<h2 id="strategies">Strategies</h2>
+
+<p>Now look at placement strategies. Placement strategies are used to identify an instance that meets a specific strategy. ECS supports three task placement strategies:</p>
+
+<ul>
+<li><code>random</code></li>
+<li><code>binpack</code></li>
+<li><code>spread</code></li>
+</ul>
+
+<p>Random is how RunTask places tasks by default and is fairly straightforward (it doesn’t require further parameters). The two other strategies, binpack and spread, take opposite actions. Binpack places tasks on as few instances as possible, helping to optimize resource utilization, while spread places tasks evenly across your cluster to help maximize availability. By default, ECS uses spread with the  <em>ecs.availability-zone</em>  attribute to place tasks.</p>
+
+<pre><code class="language-bash">   &quot;placementStrategy&quot;: [ 
+      { 
+         &quot;field&quot;: &quot;string&quot;,
+         &quot;type&quot;: &quot;string&quot;
+      }
+   ],
+</code></pre>
+
+<h3 id="random">Random</h3>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-4-random.png" alt="Placement Random" /></p>
+
+<p>Random places tasks on instances at random. This still honors the other constraints that you specified, implicitly or explicitly. Specifically, it still makes sure that tasks are scheduled on instances with enough resources to run them.</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 5 \
+--placement-strategy type=&quot;random&quot;
+</code></pre>
+
+<h3 id="bin-packing">Bin packing</h3>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-4-binpack.png" alt="Placement Binpack" /></p>
+
+<p>The binpack strategy tries to fit your workloads in as few instances as possible. It gets its name from the  <a href="https://en.wikipedia.org/wiki/Bin_packing_problem">bin packing problem</a>  where the goal is to fit objects of various sizes in the smallest number of bins. It is well suited to scenarios for minimizing the number of instances in your cluster, perhaps for cost savings, and lends itself well to automatic scaling for elastic workloads, to shut down instances that are not in use.</p>
+
+<p>When you use the binpack strategy, you must also indicate if you are trying to make optimal use of your instances’ CPU or memory. This is done by passing an extra  <em>field</em>  parameter, which tells the task placement engine which parameter to use to evaluate how “full” your “bins” are. It then chooses the instance with the least available CPU or memory (depending on which you pick). If there are multiple instances with this CPU or memory remaining, it chooses randomly.</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 8 --placement-strategy type=&quot;binpack&quot;,field=&quot;cpu&quot;
+
+aws ecs run-task --task-definition nouvelleApp \
+--count 8 --placement-strategy type=&quot;binpack&quot;,field=&quot;memory&quot;
+</code></pre>
+
+<h3 id="spread">Spread</h3>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-4-spread.png" alt="Placement Spread" /></p>
+
+<p>The spread strategy, contrary to the binpack strategy, tries to put your tasks on as many different instances as possible. It is typically used to achieve high availability and mitigate risks, by making sure that you don’t put all your task-eggs in the same instance-baskets. Spread across Availability Zones, therefore, is the default placement strategy used for services.</p>
+
+<p>When using the spread strategy, you must also indicate a  <em>field</em> parameter. It is used to indicate the “bins” that you are considering. The accepted values are  <em>instanceID</em>  to balance tasks across all instances,  <em>host</em>, or attribute key:value pairs such as  <em>attribute:ecs.availability-zone</em>  to balance tasks across zones. There are several AWS attributes that start with the “ecs” prefix, but you can be creative and create your own attributes.</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 8 \
+--placement-strategy type=&quot;spread&quot;,field=&quot;attribute:ecs.availability-zone&quot;
+</code></pre>
+
+<h2 id="chaining-placement-strategies">Chaining placement strategies</h2>
+
+<p><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2019/01/03/taskplacement-1-placement-binpackspreadaz.png" alt="Placement binpack spread" /></p>
+
+<p>Now that you’ve seen how to use task placement strategies, you can also chain multiple task placement strategies with their respective attributes together. You can have up to five strategy rules per service. Perhaps you want to spread tasks across Availability Zones and binpack:</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 8 \
+--placement-strategy type=&quot;spread&quot;,field=&quot;attribute:ecs.availability-zone&quot; type=&quot;binpack&quot;,field=&quot;memory&quot;
+</code></pre>
+
+<h2 id="use-cases">Use cases</h2>
+
+<p>Here are some use cases for task placement so you can see how they can be solved by combining attributes, expressions, constraints, and strategies.</p>
+
+<h4 id="task-creation">Task creation</h4>
+
+<p>Mariya is fairly new to using containers and especially container orchestrators. She wants to try ECS and has a simple application that she first wants to get running on a single node. (Solution: Use the RunTask API.)</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp
+</code></pre>
+
+<h4 id="scaling">Scaling</h4>
+
+<p>After trying this, Mariya wants to scale her application to run 10 containers across any available nodes in her cluster. (Solution: This means she needs to run a task using either random or spread placement strategies.)</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 10 \
+--placement-strategy type=&quot;random&quot;
+</code></pre>
+
+<h4 id="availability">Availability</h4>
+
+<p>Mariya then realizes that if she wants her tasks to automatically restart themselves if they fail, or if she wants more than 10 instantiations of her task running, she needs to create a service. (Solution: Create a service.)</p>
+
+<pre><code class="language-bash">aws ecs create-service --task-definition nouvelleApp \
+--desiredCount 300 --placement-strategy type=&quot;random&quot;
+</code></pre>
+
+<p>Christopher wants to achieve high availability by distributing his tasks amongst all the instances in his cluster so he minimizes impact if any one host goes down. (Solution: To do this he uses spread placement over host name.)</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 9 \
+--placement-strategy type=&quot;spread&quot;,field=&quot;host&quot;
+</code></pre>
+
+<p>Ming-ya wants to run a monitoring container on each instance in her cluster. To help her do this, she creates a service with a high desired count and a  <em>distinctInstance</em>  placement constraint. The ECS service scheduler ensures that each instance in the cluster runs this task (up to the desired count).</p>
+
+<pre><code class="language-bash">aws ecs create-service --service-name monitoring \
+--task-definition monitor \
+--desiredCount 500 \
+--placement-constraints type=&quot;distinctInstance&quot;
+</code></pre>
+
+<h4 id="availability-and-task-groups">Availability and Task Groups</h4>
+
+<p>Alex wants to run a fleet of webservers. For performance reasons, they want each webserver to have local access to a caching process that was written by another team. They define their webserver as one task, the caching server as a second task. When they launch their webserver task they uses a placement constraint so that the tasks are only placed on instances that are already hosting the cache task. (Solution: Use placement constraints with a task group.)</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition cache \
+--group caching --count 9 \
+--placement-constraints type=&quot;distinctInstance&quot;
+
+aws ecs run-task --task-definition webserver \
+--count 9 \
+--placement-constraints type=&quot;distinctInstance&quot; type=&quot;memberOf&quot;,expression=&quot;task:group == caching&quot;
+</code></pre>
+
+<h4 id="availability-and-resource-optimization">Availability and resource optimization</h4>
+
+<p>Jake wants to achieve high availability, but he has a limited budget and needs to optimize all the resources he uses. (Solution: Take a balanced approach of spreading over availability Availability Zones and binpacking on memory within a zone.)</p>
+
+<pre><code class="language-bash">aws ecs run-task --task-definition nouvelleApp \
+--count 9 \
+--placement-strategy type=&quot;spread&quot;,field=&quot;attribute:ecs.availability-zone&quot; type=&quot;binpack&quot;,field=&quot;memory&quot;
+</code></pre>
+
+<h4 id="instance-type-selection">Instance type selection</h4>
+
+<p>Aditya has a GPU workload that they want to run in containers on ECS. He needs to ensure that only GPU-enabled instances are used for this workload. (Solution: Create a service and spread on instance type = G2* or whatever other GPU-enabled instance types are in the cluster)</p>
+
+<pre><code class="language-bash">aws ecs create-service --service-name workload \
+--task-definition GPU --desiredCount 30 \
+--placement-constraints type=&quot;memberOf&quot;,expression=&quot;attribute:ecs.instance-type =~ g2* or attribute:ecs.instance-type =~ p2*&quot;
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>You’ve now looked at task placement at a high level, as well as:</p>
+
+<ul>
+<li>Attributes, task groups, and expressions</li>
+<li>Constraints</li>
+<li>Strategies</li>
+<li>Example use cases</li>
+</ul>
+
+<p>To dive deeper into any of these aspects, check out  <a href="https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement.html">Task Placement</a>. Also, feel free to ask any questions!</p>
+
+<p><a href="https://twitter.com/tiffanyfayj"><img src="https://d2908q01vomqb2.cloudfront.net/1b6453892473a467d07372d45eb05abc2031647a/2018/01/24/twitter-icon-8-15x15.png" alt="" /></a><a href="https://twitter.com/tiffanyfayj">@tiffanyfayj</a></p>
+
+<p>TAGS:  <a href="https://aws.amazon.com/blogs/compute/tag/amazon-ecs/">Amazon ECS</a>,  <a href="https://aws.amazon.com/blogs/compute/tag/containers/">Containers</a>,  <a href="https://aws.amazon.com/blogs/compute/tag/docker/">Docker</a>,  <a href="https://aws.amazon.com/blogs/compute/tag/ecs/">ECS</a></p>
+
+<p><a href="https://commenting.awsblogs.com/embed.html?disqus_shortname=aws-compute&amp;disqus_identifier=5567&amp;disqus_title=Amazon+ECS+Task+Placement&amp;disqus_url=https://aws.amazon.com/blogs/compute/amazon-ecs-task-placement/">View Comments</a></p>
+
+<p><a href="https://aws.amazon.com/podcasts/aws-podcast/?sc_icampaign=aware_aws-podcast&amp;sc_ichannel=ha&amp;sc_icontent=awssm-2021&amp;sc_iplace=tile&amp;trk=ha_awssm-2021"><br />
+</a></p>
+
+            </div>
+        </article>
+
+        <hr />
+
+        <div class="post-info">
+                <p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg><span class="tag"><a href="/tags/posts">posts</a></span>
+                </p>
+
+            <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>2755 Words</p>
+
+            <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2016-10-03 04:55 &#43;0200</p>
+        </div>
+
+        
+
+        
+    </main>
+
+            </div>
+
+            
+                <footer class="footer">
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2019</span>
+            
+            <span></span>
+            <span> <a href="/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a></span>
+        </div>
+    </div>
+    <div class="footer__inner">
+        <div class="footer__content">
+
+        </div>
+    </div>
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a></span>
+            <span>Made with &#10084; by <a href="https://github.com/rhazdon">rhazdon</a></span>
+        </div>
+    </div>
+</footer>
+
+            
+        </div>
+
+        
+
+
+
+
+<script type="text/javascript" src="/bundle.min.9e52e68b082cf2a30a7fead88260edb8818fbd7f7831e39674917d4539ec75df41ba88eaddfbd916594ab4fb2a31913b46cf2d6094cf80381edb8c632512a8ca.js" integrity="sha512-nlLmiwgs8qMKf&#43;rYgmDtuIGPvX94MeOWdJF9RTnsdd9Buojq3fvZFllKtPsqMZE7Rs8tYJTPgDge24xjJRKoyg=="></script>
+
+
+
+    </body>
+</html>
