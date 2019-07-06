@@ -3,59 +3,59 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/posts/first/</loc>
+    <loc>/cloudware.ninja/posts/first/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/about/</loc>
+    <loc>/cloudware.ninja/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/categories/</loc>
-    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/</loc>
+    <loc>/cloudware.ninja/categories/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/posts/</loc>
+    <loc>/cloudware.ninja/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/tags/</loc>
+    <loc>/cloudware.ninja/posts/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/categories/about/</loc>
+    <loc>/cloudware.ninja/tags/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/tags/about/</loc>
+    <loc>/cloudware.ninja/categories/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/categories/posts/</loc>
+    <loc>/cloudware.ninja/tags/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>almirosmanovic.github.io/cloudware.ninja/tags/posts/</loc>
+    <loc>/cloudware.ninja/categories/posts/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/cloudware.ninja/tags/posts/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
