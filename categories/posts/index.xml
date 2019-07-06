@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>posts on Cloudware</title>
+    <title>posts on Cloudware ninja</title>
     <link>/cloudware.ninja/categories/posts/</link>
-    <description>Recent content in posts on Cloudware</description>
+    <description>Recent content in posts on Cloudware ninja</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
+    <copyright>Almir Osmanovic</copyright>
     <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
     
 	<atom:link href="/cloudware.ninja/categories/posts/index.xml" rel="self" type="application/rss+xml" />
