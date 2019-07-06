@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>posts on Cloudware</title>
-    <link>/tags/posts/</link>
+    <link>almirosmanovic.github.io/cloudware.ninja/tags/posts/</link>
     <description>Recent content in posts on Cloudware</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
     
-	<atom:link href="/tags/posts/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="almirosmanovic.github.io/cloudware.ninja/tags/posts/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>AWS ECS Streategy</title>
-      <link>/posts/first/</link>
+      <link>almirosmanovic.github.io/cloudware.ninja/posts/first/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>/posts/first/</guid>
+      <guid>almirosmanovic.github.io/cloudware.ninja/posts/first/</guid>
       <description>Amazon Elastic Container Service (ECS) is a highly scalable, high-performance container orchestration service that allows you to easily run and scale containerized applications on AWS. This post covers how Amazon Elastic Container Service (Amazon ECS) runs containers in a cluster with the EC2 launch type. Topics include why AWS built the task placement engine, the different strategies and constraints available to decide where and how containers are run, and things to consider when picking placement strategies.</description>
     </item>
     
