@@ -2,32 +2,53 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Cloudware ninja</title>
-    <link>/cloudware.ninja/</link>
+    <link>/</link>
     <description>Recent content on Cloudware ninja</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Almir Osmanovic</copyright>
-    <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
+    <lastBuildDate>Tue, 01 Oct 2019 00:18:07 +0200</lastBuildDate>
     
-	<atom:link href="/cloudware.ninja/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Firecracker and HA kubeadm</title>
+      <link>/posts/3-post/</link>
+      <pubDate>Tue, 01 Oct 2019 00:18:07 +0200</pubDate>
+      
+      <guid>/posts/3-post/</guid>
+      <description>Run kubeadm in HA mode with Ignite VMs This short guide shows you how to setup Kubernetes in HA mode with Ignite VMs.
+NOTE: At the moment, you need to execute all these commands as root.
+NOTE: This guide assumes you have no running containers, in other words, that the IP of the first docker container that will be run is 172.17.0.2. You can check this with docker run --rm busybox ip addr.</description>
+    </item>
+    
+    <item>
+      <title>Create a Cluster with a Fargate Task Using the AWS CLI</title>
+      <link>/posts/second-post/</link>
+      <pubDate>Tue, 01 Oct 2019 00:10:07 +0200</pubDate>
+      
+      <guid>/posts/second-post/</guid>
+      <description>The following steps help you set up a cluster, register a task definition, run a task, and perform other common scenarios in Amazon ECS with the AWS CLI. Ensure that you are using the latest version of the AWS CLI. For more information on how to upgrade to the latest version, see Installing the AWS Command Line Interface.
+Topics + Prerequisites + Step 1: (Optional) Create a Cluster + Step 2: Register a Task Definition + Step 3: List Task Definitions + Step 4: Create a Service + Step 5: List Services + Step 6: Describe the Running Service</description>
+    </item>
+    
+    <item>
       <title>AWS ECS Streategy</title>
-      <link>/cloudware.ninja/posts/first/</link>
+      <link>/posts/first/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>/cloudware.ninja/posts/first/</guid>
+      <guid>/posts/first/</guid>
       <description>Amazon Elastic Container Service (ECS) is a highly scalable, high-performance container orchestration service that allows you to easily run and scale containerized applications on AWS. This post covers how Amazon Elastic Container Service (Amazon ECS) runs containers in a cluster with the EC2 launch type. Topics include why AWS built the task placement engine, the different strategies and constraints available to decide where and how containers are run, and things to consider when picking placement strategies.</description>
     </item>
     
     <item>
       <title>About</title>
-      <link>/cloudware.ninja/about/</link>
+      <link>/about/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>/cloudware.ninja/about/</guid>
-      <description>Erlich administers the Hacker Hostel, a tech incubator where Richard, Big Head, Dinesh, and Gilfoyle live and work in exchange for 10 percent of their potential businesses. Erlich clings to his glory days, when he sold aviation start-up Aviato, a move that, at least in his mind, qualifies him to be a svengali lording over other tech nerds. He still drives a car emblazoned with multiple Aviato logos and smokes copious amounts of weed.</description>
+      <guid>/about/</guid>
+      <description>Cloudware is DevOps blog about Microservices, Continuous Integration, Delivery and Deployment (CI/CD).</description>
     </item>
     
   </channel>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author"
+    content="">
+<meta name="description"
+    content="Run kubeadm in HA mode with Ignite VMs This short guide shows you how to setup Kubernetes in HA mode with Ignite VMs.
+NOTE: At the moment, you need to execute all these commands as root.
+NOTE: This guide assumes you have no running containers, in other words, that the IP of the first docker container that will be run is 172.17.0.2. You can check this with docker run --rm busybox ip addr." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="/posts/3-post/" />
+
+
+<title>
+    
+    Firecracker and HA kubeadm :: Cloudware ninja  — A DevOps Blog
+    
+</title>
+
+
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.2.1/css/flag-icon.min.css" rel="stylesheet"
+    type="text/css">
+
+
+
+<link rel="stylesheet" href="/main.min.fa40ade183a7dc0f3278ed4d19f555186511b49d2392dd51f54ed9887625a493.css">
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#252627">
+<link rel="shortcut icon" href="/favicon.ico">
+<meta name="theme-color" content="#252627">
+<meta itemprop="name" content="Firecracker and HA kubeadm">
+<meta itemprop="description" content="Run kubeadm in HA mode with Ignite VMs This short guide shows you how to setup Kubernetes in HA mode with Ignite VMs.
+NOTE: At the moment, you need to execute all these commands as root.
+NOTE: This guide assumes you have no running containers, in other words, that the IP of the first docker container that will be run is 172.17.0.2. You can check this with docker run --rm busybox ip addr.">
+
+
+<meta itemprop="datePublished" content="2019-10-01T00:18:07&#43;02:00" />
+<meta itemprop="dateModified" content="2019-10-01T00:18:07&#43;02:00" />
+<meta itemprop="wordCount" content="384">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="/"/>
+
+<meta name="twitter:title" content="Firecracker and HA kubeadm"/>
+<meta name="twitter:description" content="Run kubeadm in HA mode with Ignite VMs This short guide shows you how to setup Kubernetes in HA mode with Ignite VMs.
+NOTE: At the moment, you need to execute all these commands as root.
+NOTE: This guide assumes you have no running containers, in other words, that the IP of the first docker container that will be run is 172.17.0.2. You can check this with docker run --rm busybox ip addr."/>
+
+
+
+
+<meta property="article:published_time" content="2019-10-01 00:18:07 &#43;0200 CEST" />
+
+
+
+
+
+
+
+    </head>
+
+    <body class="dark-theme">
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">></span>
+            <span class="logo__text">hello operator</span>
+            <span class="logo__cursor"></span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about">About</a></li><li><a href="/posts">Blog</a></li>
+    </ul>
+</nav>
+
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+
+            <span class="theme-toggle"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 41C32.4934 41 41 32.4934 41 22C41 11.5066 32.4934 3 22
+  3C11.5066 3 3 11.5066 3 22C3 32.4934 11.5066 41 22 41ZM7 22C7
+  13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22Z"/>
+</svg>
+</span>
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+    <main class="post">
+
+        <div class="post-info">
+            <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>2 minutes
+
+            
+
+            </p>
+        </div>
+
+        <article>
+            <h1 class="post-title"><a href="/posts/3-post/">Firecracker and HA kubeadm</a></h1>
+
+            
+
+            <div class="post-content">
+                
+
+<p><img src="https://github.com/firecracker-microvm/firecracker/raw/master/docs/images/fc_logo_full_white-bg.png" alt="Firecracker Logo Title" /></p>
+
+<h2 id="run-kubeadm-in-ha-mode-with-ignite-vms">Run kubeadm in HA mode with Ignite VMs</h2>
+
+<p>This short guide shows you how to setup Kubernetes in HA mode with Ignite VMs.</p>
+
+<p><strong>NOTE:</strong> At the moment, you need to execute all these commands as <code>root</code>.</p>
+
+<p><strong>NOTE:</strong> This guide assumes you have no running containers, in other words, that
+the IP of the first docker container that will be run is <code>172.17.0.2</code>. You can check
+this with <code>docker run --rm busybox ip addr</code>.</p>
+
+<p>First set up some files and certificates using <code>prepare.sh</code> from this directory:</p>
+
+<pre><code class="language-bash">./prepare.sh
+</code></pre>
+
+<p>This will create a kubeadm configuration file, generate the CA cert, give you a kubeconfig file, etc.</p>
+
+<h3 id="start-the-seed-master">Start the seed master</h3>
+
+<p>For the bootstap master, copy over the CA cert and key to use, and the kubeadm config file:</p>
+
+<pre><code class="language-bash">ignite run weaveworks/ignite-kubeadm:latest \
+    --cpus 2 \
+    --memory 1GB \
+    --ssh \
+    --copy-files $(pwd)/run/config.yaml:/kubeadm.yaml \
+    --copy-files $(pwd)/run/pki/ca.crt:/etc/kubernetes/pki/ca.crt \
+    --copy-files $(pwd)/run/pki/ca.key:/etc/kubernetes/pki/ca.key \
+    --name master-0
+</code></pre>
+
+<p>Initialize it with <code>kubeadm</code> using <code>ignite exec</code>:</p>
+
+<pre><code class="language-bash">ignite exec master-0 kubeadm init --config /kubeadm.yaml --upload-certs
+</code></pre>
+
+<h3 id="join-additional-masters">Join additional masters</h3>
+
+<p>Create more master VMs, but copy only the variables we need for joining:</p>
+
+<pre><code class="language-bash">for i in {1..2}; do
+    ignite run weaveworks/ignite-kubeadm:latest \
+        --cpus 2 \
+        --memory 1GB \
+        --ssh \
+        --copy-files $(pwd)/run/k8s-vars.sh:/etc/profile.d/02-k8s.sh \
+        --name master-${i}
+done
+</code></pre>
+
+<p>Use <code>ignite exec</code> to join each VM to the control plane:</p>
+
+<pre><code class="language-bash">for i in {1..2}; do
+    ignite exec master-${i} kubeadm join firekube.luxas.dev:6443 \
+        --token ${TOKEN} \
+        --discovery-token-ca-cert-hash sha256:${CA_HASH} \
+        --certificate-key ${CERT_KEY} \
+        --control-plane
+done
+</code></pre>
+
+<h3 id="set-up-a-haproxy-loadbalancer-locally">Set up a HAProxy loadbalancer locally</h3>
+
+<pre><code class="language-bash">docker run -d -v $(pwd)/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg -p 6443:443 haproxy:alpine
+</code></pre>
+
+<h3 id="use-kubectl">Use kubectl</h3>
+
+<p>This will make <code>kubectl</code> talk to any of the three masters you&rsquo;ve set up, via HAproxy.</p>
+
+<pre><code class="language-bash">export KUBECONFIG=$(pwd)/run/admin.conf
+
+kubectl get nodes
+</code></pre>
+
+<p>Right now it&rsquo;s expected that the nodes are in state <code>NotReady</code>, as CNI networking isn&rsquo;t set up.</p>
+
+<h4 id="install-a-cni-network-weave-net">Install a CNI Network &ndash; Weave Net</h4>
+
+<p>We&rsquo;re going to use <a href="https://github.com/weaveworks/weave">Weave Net</a>.</p>
+
+<pre><code class="language-bash">kubectl apply -f https://git.io/weave-kube-1.6
+</code></pre>
+
+<p>With this, the nodes should transition into the <code>Ready</code> state in a minute or so.</p>
+
+<h3 id="watch-the-cluster-heal">Watch the cluster heal</h3>
+
+<p>Kill the bootstrap master and see the cluster recover:</p>
+
+<pre><code class="language-bash">ignite rm -f master-0
+
+kubectl get nodes
+</code></pre>
+
+<p>What&rsquo;s happening underneath here is that HAproxy (or any other loadbalancer) notices that
+<code>master-0</code> is unhealthy, and removes it from the roundrobin list. etcd also realizes
+that one peer is lost, and re-elects a leader amongst the two that are still standing.</p>
+
+            </div>
+        </article>
+
+        <hr />
+
+        <div class="post-info">
+
+            <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>384 Words</p>
+
+            <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2019-10-01 00:18 &#43;0200</p>
+        </div>
+
+        
+            <div class="pagination">
+                <div class="pagination__title">
+                    <span class="pagination__title-h">Read other posts</span>
+                    <hr />
+                </div>
+
+                <div class="pagination__buttons">
+                    
+
+                    
+                        <span class="button next">
+                            <a href="/posts/second-post/">
+                                <span class="button__text">Create a Cluster with a Fargate Task Using the AWS CLI</span>
+                                <span class="button__icon">→</span>
+                            </a>
+                        </span>
+                    
+                </div>
+            </div>
+        
+
+        
+    </main>
+
+            </div>
+
+            
+                <footer class="footer">
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>&copy; 2019</span>
+            
+            <span>Almir Osmanovic</span>
+            <span> <a href="/posts/index.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a></span>
+        </div>
+    </div>
+    <div class="footer__inner">
+        <div class="footer__content">
+
+        </div>
+    </div>
+    <div class="footer__inner">
+        <div class="footer__content">
+            <span>Powered by <a href="http://gohugo.io">Hugo</a></span>
+            <span>Made with &#10084; <a href="https://github.com/"></a></span>
+        </div>
+    </div>
+</footer>
+
+            
+        </div>
+
+        
+
+
+
+
+<script type="text/javascript" src="/bundle.min.9e52e68b082cf2a30a7fead88260edb8818fbd7f7831e39674917d4539ec75df41ba88eaddfbd916594ab4fb2a31913b46cf2d6094cf80381edb8c632512a8ca.js" integrity="sha512-nlLmiwgs8qMKf&#43;rYgmDtuIGPvX94MeOWdJF9RTnsdd9Buojq3fvZFllKtPsqMZE7Rs8tYJTPgDge24xjJRKoyg=="></script>
+
+
+
+    </body>
+</html>
